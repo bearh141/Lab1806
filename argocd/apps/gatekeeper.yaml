@@ -12,6 +12,16 @@ spec:
     chart: gatekeeper
     repoURL: https://open-policy-agent.github.io/gatekeeper/charts
     targetRevision: 3.17.1
+    helm:
+      parameters:
+        - name: controllerManager.livenessProbe.timeoutSeconds
+          value: "5"
+        - name: controllerManager.readinessProbe.timeoutSeconds
+          value: "5"
+        - name: audit.livenessProbe.timeoutSeconds
+          value: "5"
+        - name: audit.readinessProbe.timeoutSeconds
+          value: "5"
   destination:
     server: https://kubernetes.default.svc
     namespace: gatekeeper-system
