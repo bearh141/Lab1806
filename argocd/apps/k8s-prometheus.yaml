@@ -7,6 +7,25 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-operator
+      jsonPointers:
+        - /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+        - /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-kube-state-metrics
+      jsonPointers:
+        - /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+        - /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+    - group: apps
+      kind: DaemonSet
+      name: kube-prometheus-stack-prometheus-node-exporter
+      jsonPointers:
+        - /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+        - /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
   project: default
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
