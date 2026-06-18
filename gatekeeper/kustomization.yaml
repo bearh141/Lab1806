@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - templates/k8sdisallowlatesttag.yaml
+  - templates/k8srequiredresourcelimits.yaml
+  - templates/k8sdisallowrootuser.yaml
+  - templates/k8sdisallowhostnetwork.yaml
+  - templates/k8srequiredownerlabel.yaml
+  - constraints/disallow-latest-tag.yaml
+  - constraints/require-resource-limits.yaml
+  - constraints/disallow-root-user.yaml
+  - constraints/disallow-host-network.yaml
+  - constraints/require-owner-label.yaml
