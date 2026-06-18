@@ -1,0 +1,14 @@
+apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: image-signature-policy
+spec:
+  images:
+    - glob: "ghcr.io/bearh141/*"
+  authorities:
+    - key:
+        data: |
+          -----BEGIN PUBLIC KEY-----
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXS+Hvf2hPKuX6+KrDl9rGvX9ZEzj
+          ac38u+CXBR81AmD9BhnMNYFTo5hPtxHr5EA8jR1AcPRh8nroXu4oia7N6A==
+          -----END PUBLIC KEY-----
