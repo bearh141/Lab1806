@@ -11,6 +11,12 @@ spec:
     chart: policy-controller
     repoURL: https://sigstore.github.io/helm-charts
     targetRevision: 0.10.6
+    helm:
+      parameters:
+        - name: webhook.livenessProbe.timeoutSeconds
+          value: "5"
+        - name: webhook.readinessProbe.timeoutSeconds
+          value: "5"
   destination:
     server: https://kubernetes.default.svc
     namespace: cosign-system
