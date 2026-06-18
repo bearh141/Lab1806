@@ -40,23 +40,36 @@ cosign verify --key signing/cosign.pub ghcr.io/bearh141/w10-api-141:0.0.2
 
 ## 3. Verification & Validation in Cluster
 
-### Test 1: Deploying Unsigned Image (Expected: REJECT)
-Attempt to deploy an unsigned image (e.g. standard `nginx:latest` or an unsigned build) in the labeled `payments` namespace:
+### Setup Test Namespace
+Create a temporary namespace and label it to enable Sigstore verification:
 ```bash
-kubectl run test-unsigned --image=nginx:latest -n payments
+kubectl create ns demo-secure
+kubectl label ns demo-secure policy.sigstore.dev/include=true
+```
+
+### Test 1: Deploying Unsigned Image (Expected: REJECT)
+Attempt to deploy an unsigned image (e.g. standard `nginx:latest` or an unsigned build) in the labeled namespace:
+```bash
+kubectl run test-unsigned --image=nginx:latest -n demo-secure
 ```
 Expected output:
 ```
-Error from server (Forbidden): admission webhook "policy.sigstore.dev" denied the request: image nginx:latest is not signed/verified.
+Error from server (BadRequest): admission webhook "policy.sigstore.dev" denied the request: validation failed: no matching policies: spec.containers[0].image
 ```
 
 ### Test 2: Deploying Signed Image (Expected: PASS)
-Deploy the API pod using the signed image built from the GitHub Actions pipeline:
+Once your GitHub Actions CI pipeline runs and signs the image, deploy the signed image:
 ```bash
-kubectl run test-signed --image=ghcr.io/bearh141/w10-api-141:0.0.2 -n payments
+# Note: replace with your actual signed image reference if needed
+kubectl run test-signed --image=ghcr.io/bearh141/w10-api-141:0.0.2 -n demo-secure --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":1000},"containers":[{"name":"test-signed","image":"ghcr.io/bearh141/w10-api-141:0.0.2","resources":{"limits":{"cpu":"100m","memory":"64Mi"},"requests":{"cpu":"50m","memory":"32Mi"}}}]}}'
 ```
 Expected output:
 ```
 pod/test-signed created
 ```
 The pod is successfully admitted because its signature matches the public key in `ClusterImagePolicy`.
+
+### Clean up Test Namespace
+```bash
+kubectl delete ns demo-secure
+```

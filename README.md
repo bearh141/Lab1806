@@ -219,13 +219,6 @@ minikube stop -p w10
 minikube delete -p w10
 ```
 
-## Onboarding Challenge - Multi-Tenant Isolation
 
-### 1. Vì sao guardrail cũ tự áp cho team B mà không cần viết luật mới?
-Các chính sách bảo mật (Constraints) của OPA Gatekeeper được áp dụng ở phạm vi toàn bộ Cluster (Cluster-scoped) dựa trên các CustomResourceDefinitions (như `K8sPSPAllowedUsers`, `K8sRequiredOwnerLabel`, `K8sRequiredResourceLimits`, v.v.). Khi team B deploy các tài nguyên của họ vào namespace `payments`, Gatekeeper sẽ tự động lọc, đối chiếu và áp dụng các luật này lên mọi tài nguyên mới được tạo mà không cần viết thêm bất kỳ ConstraintTemplate hay Constraint nào khác. Ngoại trừ các namespace được khai báo loại trừ (`excludedNamespaces` như `kube-system`, `argocd`, `external-secrets`), mọi namespace mới như `payments` đều mặc định nằm trong phạm vi thực thi.
-
-### 2. Role/RoleBinding khác ClusterRoleBinding ra sao để giữ cô lập?
-* **Role & RoleBinding**: Là các tài nguyên có phạm vi Namespace (Namespace-scoped). `Role` định nghĩa các quyền trong một namespace cụ thể, và `RoleBinding` gán các quyền đó cho một chủ thể (User/Group/ServiceAccount) trong chính namespace đó. Điều này đảm bảo user `payments-dev` chỉ có thể tương tác với các tài nguyên (Deployments, Pods, Services, v.v.) bên trong namespace `payments` và hoàn toàn bị cô lập khỏi namespace `demo`.
-* **ClusterRoleBinding**: Là tài nguyên có phạm vi Cluster (Cluster-scoped). Nếu sử dụng `ClusterRoleBinding` để liên kết Role/ClusterRole với user `payments-dev`, các quyền hạn đó sẽ có hiệu lực trên **toàn bộ các namespace** của cluster (bao gồm cả `demo`, `kube-system`, `argocd`, v.v.). Điều này vi phạm nguyên tắc đặc quyền tối thiểu (Least Privilege) và phá vỡ cấu trúc cô lập đa người dùng (multi-tenancy) của dự án.
 
 
