@@ -9,9 +9,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/bearh141/Lab1806.git
-    path: gatekeeper-operator
-    targetRevision: main
+    chart: gatekeeper
+    repoURL: https://open-policy-agent.github.io/gatekeeper/charts
+    targetRevision: 3.17.1
   destination:
     server: https://kubernetes.default.svc
     namespace: gatekeeper-system
@@ -21,10 +21,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
-  ignoreDifferences:
-    - group: apiextensions.k8s.io
-      kind: CustomResourceDefinition
-      jsonPointers:
-        - /spec/conversion
-        - /spec/preserveUnknownFields
+
