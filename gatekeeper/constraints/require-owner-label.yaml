@@ -18,4 +18,5 @@ spec:
       - argocd
       - external-secrets
       - monitoring
+      - cosign-system
 

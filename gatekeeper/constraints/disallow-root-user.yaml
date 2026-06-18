@@ -20,6 +20,7 @@ spec:
       - argocd
       - external-secrets
       - monitoring
+      - cosign-system
 
   parameters:           
     runAsUser:
