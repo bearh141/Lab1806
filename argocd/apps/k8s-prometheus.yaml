@@ -24,6 +24,10 @@ spec:
               limits:
                 cpu: 1000m
                 memory: 1Gi
+            livenessProbe:
+              timeoutSeconds: 15
+            readinessProbe:
+              timeoutSeconds: 15
 
         prometheusOperator:
           resources:
@@ -33,6 +37,10 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          livenessProbe:
+            timeoutSeconds: 15
+          readinessProbe:
+            timeoutSeconds: 15
 
         alertmanager:
           alertmanagerSpec:
@@ -61,6 +69,16 @@ spec:
             limits:
               cpu: 300m
               memory: 256Mi
+          customLivenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            timeoutSeconds: 15
+          customReadinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            timeoutSeconds: 15
 
         prometheus-node-exporter:
           resources:
@@ -70,6 +88,10 @@ spec:
             limits:
               cpu: 150m
               memory: 128Mi
+          livenessProbe:
+            timeoutSeconds: 15
+          readinessProbe:
+            timeoutSeconds: 15
 
 
         alertmanager:
