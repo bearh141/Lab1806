@@ -1,6 +1,6 @@
 # BÁO CÁO MINH CHỨNG (EVIDENCE) - LAB BUỔI SÁNG
 
-Tài liệu này hướng dẫn chi tiết các bước chạy lệnh kiểm tra và cung cấp sẵn cấu trúc tên file hình ảnh để bạn đặt tên và chèn vào báo cáo nghiệm thu dễ dàng nhất.
+Tài liệu này hướng dẫn chi tiết các bước chạy lệnh kiểm tra và cung cấp sẵn cấu trúc tên file hình ảnh để bạn đặt tên và chèn vào báo cáo nghiệm thu cho 3 phần Lab buổi sáng (RBAC, Gatekeeper, và Custom Policy).
 
 ---
 
@@ -36,7 +36,6 @@ Chứng minh OPA Gatekeeper đã cấu hình và chặn thành công các tài n
 
 ### Lệnh chạy kiểm tra:
 Chạy lần lượt các lệnh apply file test trong thư mục `tests/`:
-
 ```bash
 # 1. Test cấm tag :latest (Kỳ vọng: Bị reject)
 kubectl apply -f tests/pod-latest.yaml
@@ -61,74 +60,26 @@ kubectl delete -f tests/pod-valid.yaml
 * **Hiển thị hình ảnh:**
   ![Minh chứng OPA Gatekeeper](./images/1_2_gatekeeper.png)
 
-
 ---
 
 ## PHẦN 3: LAB 1.3 - CUSTOM CONSTRAINTTEMPLATE (OWNER LABEL)
 Chứng minh chính sách tùy chỉnh (Custom Policy) bắt buộc mọi Deployment/Rollout phải có label `owner` hoạt động chính xác.
 
 ### Lệnh chạy kiểm tra:
+Chạy lần lượt các lệnh test trong terminal:
 ```bash
 # 1. Test deploy Deployment thiếu label owner (Kỳ vọng: Bị reject)
 kubectl apply -f tests/deploy-no-owner.yaml
 
 # 2. Test deploy Deployment có label owner (Kỳ vọng: Tạo thành công)
 kubectl apply -f tests/deploy-with-owner.yaml
+
+# 3. Dọn dẹp sau khi kiểm tra xong:
 kubectl delete -f tests/deploy-with-owner.yaml
 ```
 
 ### Minh chứng cần chụp:
-* **Tên file ảnh khi Deployment bị chặn do thiếu label:** `1_3_custom_policy_no_owner.png`
-  ![no owner label blocked](./images/1_3_custom_policy_no_owner.png)
-
-* **Tên file ảnh khi Deployment tạo thành công nhờ có label:** `1_3_custom_policy_with_owner.png`
-  ![with owner label created](./images/1_3_custom_policy_with_owner.png)
-
----
-
-## PHẦN 4: LAB 2 - ARGO ROLLOUTS & CANARY PROGRESSIVE DELIVERY
-Chứng minh việc chạy canary rollout, phân tích tự động (Automated Analysis) và tự động Rollback hoạt động đúng đắn.
-
-### Kịch bản 1: Cập nhật thành công (Error Rate = 0%)
-1. Mở file `app-api/rollout.yaml`, đảm bảo `ERROR_RATE` là `"0"`.
-2. Thực hiện git commit và push:
-   ```bash
-   git add app-api/rollout.yaml
-   git commit -m "test: rollout success"
-   git push origin main
-   ```
-3. Theo dõi tiến trình Rollout:
-   ```bash
-   kubectl argo rollouts get rollout api -n demo
-   ```
-
-* **Tên file ảnh Rollout thành công (ArgoCD UI hoặc terminal):** `2_canary_success.png`
-  ![Canary Success](./images/2_canary_success.png)
-
----
-
-### Kịch bản 2: Tự động Rollback do lỗi (Error Rate = 15%)
-1. Sửa `ERROR_RATE` trong `app-api/rollout.yaml` thành `"0.15"`.
-2. Commit và push:
-   ```bash
-   git add app-api/rollout.yaml
-   git commit -m "test: rollout fail and rollback"
-   git push origin main
-   ```
-3. Theo dõi tiến trình tự động hủy bỏ và hoàn tác phiên bản:
-   ```bash
-   kubectl argo rollouts get rollout api -n demo -w
-   ```
-
-* **Tên file ảnh Rollback thành công do Analysis fail:** `2_canary_rollback.png`
-  ![Canary Rollback](./images/2_canary_rollback.png)
-
----
-
-### Kịch bản 3: Kích hoạt Email cảnh báo SLO (Error Rate = 10%)
-1. Sửa `ERROR_RATE` trong `app-api/rollout.yaml` thành `"0.10"`.
-2. Commit và push lên GitHub.
-3. Chờ 2-3 phút, sau đó kiểm tra hòm thư email của bạn.
-
-* **Tên file ảnh chụp Email cảnh báo SLO từ AlertManager:** `2_slo_email.png`
-  ![SLO Alert Email](./images/2_slo_email.png)
+* **Tên file ảnh đặt là:** `1_3_custom_policy.png`
+* **Nội dung cần chụp:** Chụp toàn bộ terminal hiển thị kết quả chạy cả 3 lệnh trên (cho thấy lệnh đầu bị chặn/Forbidden, lệnh thứ 2 tạo thành công, và lệnh thứ 3 dọn dẹp deployment).
+* **Hiển thị hình ảnh:**
+  ![Minh chứng Custom Owner Label Policy](./images/1_3_custom_policy.png)
