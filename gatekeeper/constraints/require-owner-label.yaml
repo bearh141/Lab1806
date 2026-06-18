@@ -12,3 +12,10 @@ spec:
         kinds: ["Deployment"]
       - apiGroups: ["argoproj.io"]
         kinds: ["Rollout"]
+    excludedNamespaces:
+      - kube-system
+      - gatekeeper-system
+      - argocd
+      - external-secrets
+      - monitoring
+
