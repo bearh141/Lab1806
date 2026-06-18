@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/open-policy-agent/gatekeeper.git
     path: deploy/gatekeeper
-    targetRevision: release-3.17.1
+    targetRevision: v3.17.1
   destination:
     server: https://kubernetes.default.svc
     namespace: gatekeeper-system
