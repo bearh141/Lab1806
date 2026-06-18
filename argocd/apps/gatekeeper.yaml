@@ -30,6 +30,9 @@ spec:
       kind: CustomResourceDefinition
       jsonPointers:
         - /status
+        - /metadata/labels
+        - /metadata/annotations
+        - /spec/conversion
   syncPolicy:
     automated:
       prune: true
