@@ -1,6 +1,6 @@
 # Gatekeeper Policy Test Guide
 
-This directory contains test Kubernetes Pod manifests to verify that the OPA Gatekeeper policies are functioning correctly on the cluster.
+This directory contains test Kubernetes manifests to verify that the OPA Gatekeeper policies are functioning correctly on the cluster.
 
 All tests are configured to run in the `demo` namespace.
 
@@ -36,10 +36,24 @@ This pod is configured correctly (pinned image version, has cpu/memory limits, r
 kubectl apply -f tests/pod-valid.yaml
 ```
 
+## 6. Test: Require Owner Label - Violating (Expected: REJECT)
+This Deployment does not have `metadata.labels.owner` defined, violating the `require-owner-label` custom policy.
+```bash
+kubectl apply -f tests/deploy-no-owner.yaml
+```
+
+## 7. Test: Require Owner Label - Valid (Expected: PASS)
+This Deployment has the `owner: platform-team` label defined, passing the custom policy.
+```bash
+kubectl apply -f tests/deploy-with-owner.yaml
+```
+
 ---
 
 ## Cleanup
-To delete the valid pod after testing:
+To delete the valid test resources after testing:
 ```bash
 kubectl delete -f tests/pod-valid.yaml
+kubectl delete -f tests/deploy-with-owner.yaml
 ```
+
