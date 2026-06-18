@@ -56,22 +56,11 @@ kubectl delete -f tests/pod-valid.yaml
 ```
 
 ### Minh chứng cần chụp:
-Bạn có thể chụp gom chung hoặc chia nhỏ các ảnh như sau:
+* **Tên file ảnh đặt là:** `1_2_gatekeeper.png`
+* **Nội dung cần chụp:** Chụp toàn bộ terminal hiển thị kết quả chạy cả 5 lệnh test trên (cho thấy 4 lệnh đầu bị chặn/Forbidden bởi admission webhook, lệnh thứ 5 tạo pod thành công, và lệnh dọn dẹp pod).
+* **Hiển thị hình ảnh:**
+  ![Minh chứng OPA Gatekeeper](./images/1_2_gatekeeper.png)
 
-* **Tên file ảnh tag latest bị chặn:** `1_2_gatekeeper_latest.png`
-  ![latest tag blocked](./images/1_2_gatekeeper_latest.png)
-
-* **Tên file ảnh thiếu resource limits bị chặn:** `1_2_gatekeeper_no_limits.png`
-  ![no limits blocked](./images/1_2_gatekeeper_no_limits.png)
-
-* **Tên file ảnh quyền root bị chặn:** `1_2_gatekeeper_root_user.png`
-  ![root user blocked](./images/1_2_gatekeeper_root_user.png)
-
-* **Tên file ảnh hostNetwork bị chặn:** `1_2_gatekeeper_hostnetwork.png`
-  ![hostNetwork blocked](./images/1_2_gatekeeper_hostnetwork.png)
-
-* **Tên file ảnh Pod hợp lệ được tạo thành công:** `1_2_gatekeeper_valid.png`
-  ![valid pod created](./images/1_2_gatekeeper_valid.png)
 
 ---
 
