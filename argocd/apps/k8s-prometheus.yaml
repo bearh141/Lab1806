@@ -62,58 +62,6 @@ spec:
             timeoutSeconds: 15
 
         alertmanager:
-          alertmanagerSpec:
-            resources:
-              requests:
-                cpu: 100m
-                memory: 128Mi
-              limits:
-                cpu: 500m
-                memory: 256Mi
-
-        grafana:
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-
-        kube-state-metrics:
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 300m
-              memory: 256Mi
-          customLivenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            timeoutSeconds: 15
-          customReadinessProbe:
-            httpGet:
-              path: /readyz
-              port: 8080
-            timeoutSeconds: 15
-
-        prometheus-node-exporter:
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 150m
-              memory: 128Mi
-          livenessProbe:
-            timeoutSeconds: 15
-          readinessProbe:
-            timeoutSeconds: 15
-
-
-        alertmanager:
           config:
             global:
               resolve_timeout: 5m
@@ -199,10 +147,57 @@ spec:
                     </div>
                   </body>
                   </html>
-
           alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 256Mi
             secrets:
             - alertmanager-email
+
+        grafana:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          customLivenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            timeoutSeconds: 15
+          customReadinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            timeoutSeconds: 15
+
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
+          livenessProbe:
+            timeoutSeconds: 15
+          readinessProbe:
+            timeoutSeconds: 15
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
