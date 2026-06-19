@@ -11,6 +11,9 @@ spec:
     chart: policy-controller
     repoURL: https://sigstore.github.io/helm-charts
     targetRevision: 0.10.6
+    helm:
+      values: |
+        webhookTimeoutSeconds: 30
   destination:
     server: https://kubernetes.default.svc
     namespace: cosign-system
