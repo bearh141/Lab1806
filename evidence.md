@@ -83,3 +83,88 @@ kubectl delete -f tests/deploy-with-owner.yaml
 * **Nội dung cần chụp:** Chụp toàn bộ terminal hiển thị kết quả chạy cả 3 lệnh trên (cho thấy lệnh đầu bị chặn/Forbidden, lệnh thứ 2 tạo thành công, và lệnh thứ 3 dọn dẹp deployment).
 * **Hiển thị hình ảnh:**
   ![Minh chứng Custom Owner Label Policy](./images/1_3_custom_policy.png)
+
+---
+
+## PHẦN 4: LAB 2.1 - THIẾT LẬP EXTERNAL SECRETS OPERATOR (ESO)
+Chứng minh việc tự động lấy secret từ AWS Secrets Manager thông qua SecretStore và ExternalSecret thành công.
+
+### Lệnh chạy kiểm tra:
+Chạy lần lượt các lệnh dưới đây trong terminal:
+```bash
+# 1. Kiểm tra trạng thái kết nối AWS SecretStore (Kỳ vọng: STATUS = Valid)
+kubectl get secretstore aws-store -n demo
+
+# 2. Kiểm tra trạng thái kéo Secret từ AWS Secrets Manager (Kỳ vọng: STATUS = SecretSynced)
+kubectl get externalsecret db-creds -n demo
+
+# 3. Kiểm tra Kubernetes Secret tự động được tạo ra (Kỳ vọng: Có secret tên db-secret)
+kubectl get secret db-secret -n demo
+
+# 4. Kiểm tra nội dung giải mã của Secret để xác nhận dữ liệu đã được kéo về chính xác
+kubectl get secret db-secret -n demo -o jsonpath='{.data.password}' | base64 --decode
+```
+
+### Minh chứng cần chụp:
+* **Tên file ảnh đặt là:** `2_1_eso_verify.png`
+* **Nội dung cần chụp:** Toàn bộ terminal hiển thị kết quả chạy 4 lệnh trên (STATUS hiển thị `Valid` và `SecretSynced`, Kubernetes secret `db-secret` được hiển thị và giá trị mật khẩu giải mã được in ra chính xác).
+* **Hiển thị hình ảnh:**
+  ![Minh chứng ESO](./images/2_1_eso_verify.png)
+
+---
+
+## PHẦN 5: LAB 2.2 - PHÂN TÍCH LỖ HỔNG VÀ XÁC THỰC CHỮ KÝ (TRIVY + COSIGN + SIGSTORE)
+Chứng minh việc kiểm tra lỗ hổng bảo mật (Trivy Scan), ký ảnh container (Cosign Sign) trong CI và chính sách admission controller chặn thành công ảnh không ký.
+
+### Lệnh chạy kiểm tra:
+Chạy lần lượt các lệnh dưới đây trong terminal:
+```bash
+# 1. Kích hoạt xác thực chữ ký ảnh trên namespace demo
+kubectl label namespace demo policy.sigstore.dev/include=true --overwrite
+
+# 2. Thử tạo Pod với ảnh chưa được ký (Kỳ vọng: Bị reject bởi webhook policy.sigstore.dev)
+kubectl apply -f tests/pod-unsigned.yaml
+
+# 3. Thử tạo Pod với ảnh đã ký hợp lệ (Kỳ vọng: Tạo thành công)
+kubectl apply -f tests/pod-signed.yaml
+
+# 4. Dọn dẹp sau khi kiểm tra xong:
+kubectl delete -f tests/pod-signed.yaml
+```
+
+### Minh chứng cần chụp:
+* **Tên file ảnh 1 đặt là:** `2_2_github_actions.png`
+* **Nội dung cần chụp:** Chụp màn hình lịch sử chạy GitHub Actions workflow cho thấy build, quét Trivy và ký ảnh Cosign thành công.
+* **Hiển thị hình ảnh:**
+  ![Minh chứng GitHub Actions](./images/2_2_github_actions.png)
+
+* **Tên file ảnh 2 đặt là:** `2_2_signature_verify.png`
+* **Nội dung cần chụp:** Terminal chạy lệnh deploy Pod chưa ký (bị reject với lỗi `validation failed`) và Pod đã ký (tạo thành công).
+* **Hiển thị hình ảnh:**
+  ![Minh chứng xác thực chữ ký](./images/2_2_signature_verify.png)
+
+---
+
+## PHẦN 6: LAB 2.3 - TRIỂN KHAI LIÊN TỤC (PROGRESSIVE DELIVERY - ARGO ROLLOUTS)
+Chứng minh tiến trình triển khai Canary và thu thập metrics đánh giá tự động thành công thông qua Argo Rollouts và Prometheus.
+
+### Lệnh chạy kiểm tra:
+Chạy lần lượt các lệnh dưới đây trong terminal:
+```bash
+# 1. Theo dõi tiến trình Rollout (Kỳ vọng: Đang trong các bước Canary hoặc đã hoàn thành Healthy)
+kubectl get rollout api -n demo
+
+# 2. Kiểm tra trạng thái AnalysisRun thu thập metric thành công (Kỳ vọng: STATUS = Running hoặc Successful)
+kubectl get analysisrun -n demo
+```
+
+### Minh chứng cần chụp:
+* **Tên file ảnh 1 đặt là:** `2_3_rollout_progress.png`
+* **Nội dung cần chụp:** Terminal hiển thị trạng thái Rollout đang phân chia traffic (Canary) hoặc đã chạy thành công lên 100%, kèm theo danh sách AnalysisRun thành công.
+* **Hiển thị hình ảnh:**
+  ![Minh chứng Rollout Progress](./images/2_3_rollout_progress.png)
+
+* **Tên file ảnh 2 đặt là:** `2_3_argocd_healthy.png`
+* **Nội dung cần chụp:** Chụp màn hình giao diện Argo CD cho thấy ứng dụng `api` và ứng dụng `analysis` hiển thị màu xanh lá cây (`Healthy`) và đã được đồng bộ hóa (`Synced`).
+* **Hiển thị hình ảnh:**
+  ![Argo CD Healthy](./images/2_3_argocd_healthy.png)
