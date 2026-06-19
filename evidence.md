@@ -102,7 +102,11 @@ kubectl get externalsecret db-creds -n demo
 kubectl get secret db-secret -n demo
 
 # 4. Kiểm tra nội dung giải mã của Secret để xác nhận dữ liệu đã được kéo về chính xác
+# Đối với Linux/macOS/Git Bash:
 kubectl get secret db-secret -n demo -o jsonpath='{.data.password}' | base64 --decode
+
+# Đối với Windows (PowerShell):
+$pass = kubectl get secret db-secret -n demo -o jsonpath='{.data.password}'; [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($pass))
 ```
 
 ### Minh chứng cần chụp:
