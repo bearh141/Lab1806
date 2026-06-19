@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
   - name: api
-    image: ghcr.io/bearh141/w10-api-141:0.0.2
+    image: ghcr.io/bearh141/w10-api-141:0.0.3
     resources:
       limits:
         cpu: 100m

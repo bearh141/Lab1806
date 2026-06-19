@@ -86,89 +86,101 @@ kubectl delete -f tests/deploy-with-owner.yaml
 
 ---
 
-## PHẦN 4: LAB 2.1 - THIẾT LẬP EXTERNAL SECRETS OPERATOR (ESO)
-Chứng minh việc tự động lấy secret từ AWS Secrets Manager thông qua SecretStore và ExternalSecret thành công.
+## PHẦN 4: LAB 2.1 - EXTERNAL SECRETS OPERATOR (ESO) — ROTATE KHÔNG RESTART POD
+Chứng minh ESO tự đồng bộ secret từ AWS Secrets Manager, pod không restart khi rotate.
 
 ### Lệnh chạy kiểm tra:
-Chạy lần lượt các lệnh dưới đây trong terminal:
+Chạy theo đúng thứ tự dưới đây để chứng minh đủ 3 tiêu chí nghiệm thu:
+
 ```bash
-# 1. Kiểm tra trạng thái kết nối AWS SecretStore (Kỳ vọng: STATUS = Valid)
+# BƯỚC 1: Xác nhận ESO đang sync đúng
+# 1a. Kiểm tra SecretStore kết nối AWS thành công (Kỳ vọng: STATUS = Valid)
 kubectl get secretstore aws-store -n demo
 
-# 2. Kiểm tra trạng thái kéo Secret từ AWS Secrets Manager (Kỳ vọng: STATUS = SecretSynced)
+# 1b. Kiểm tra ExternalSecret đang sync (Kỳ vọng: READY = True, STATUS = SecretSynced)
 kubectl get externalsecret db-creds -n demo
 
-# 3. Kiểm tra Kubernetes Secret tự động được tạo ra (Kỳ vọng: Có secret tên db-secret)
-kubectl get secret db-secret -n demo
-
-# 4. Kiểm tra nội dung giải mã của Secret để xác nhận dữ liệu đã được kéo về chính xác
-# Đối với Linux/macOS/Git Bash:
-kubectl get secret db-secret -n demo -o jsonpath='{.data.password}' | base64 --decode
-
-# Đối với Windows (PowerShell):
+# 1c. Xác nhận K8s Secret đã được tạo và decode giá trị password hiện tại
+# Linux/macOS/Git Bash:
+kubectl get secret db-secret -n demo -o jsonpath='{.data.password}' | base64 --decode; echo
+# Windows PowerShell:
 $pass = kubectl get secret db-secret -n demo -o jsonpath='{.data.password}'; [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($pass))
+
+# BƯỚC 2: Ghi lại AGE và RESTARTS của pod TRƯỚC khi rotate
+kubectl get pods -n demo -l app=api
+
+# BƯỚC 3: Thực hiện rotate — đổi giá trị trên AWS Secrets Manager
+# (Dùng AWS Console hoặc CLI:)
+# aws secretsmanager put-secret-value \
+#   --secret-id w10/demo/db-password \
+#   --secret-string "NewRotatedPassword123!" \
+#   --region ap-southeast-1
+
+# BƯỚC 4: Đợi ~15 giây (refreshInterval = 10s), rồi xác nhận Secret đã cập nhật
+# Linux/macOS/Git Bash:
+kubectl get secret db-secret -n demo -o jsonpath='{.data.password}' | base64 --decode; echo
+# Windows PowerShell:
+$pass = kubectl get secret db-secret -n demo -o jsonpath='{.data.password}'; [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($pass))
+
+# BƯỚC 5: Xác nhận pod KHÔNG restart (AGE và RESTARTS phải giữ nguyên so với Bước 2)
+kubectl get pods -n demo -l app=api
 ```
 
-### Minh chứng cần chụp:
-* **Tên file ảnh đặt là:** `2_1_eso_verify.png`
-* **Nội dung cần chụp:** Toàn bộ terminal hiển thị kết quả chạy 4 lệnh trên (STATUS hiển thị `Valid` và `SecretSynced`, Kubernetes secret `db-secret` được hiển thị và giá trị mật khẩu giải mã được in ra chính xác).
+### Minh chứng cần chụp — 2 ảnh:
+
+* **Tên file ảnh 1:** `2_1_eso_verify.png`
+* **Nội dung:** Terminal chạy Bước 1 — hiển thị `SecretStore STATUS=Valid`, `ExternalSecret READY=True / SecretSynced`, và giá trị password giải mã được.
 * **Hiển thị hình ảnh:**
-  ![Minh chứng ESO](./images/2_1_eso_verify.png)
+  ![Minh chứng ESO Sync](./images/2_1_eso_verify.png)
+
+* **Tên file ảnh 2:** `2_1_eso_rotate_no_restart.png`
+* **Nội dung:** Terminal chạy Bước 2 → 5 liên tiếp trong cùng 1 màn hình, chứng minh: password cũ → đổi trên AWS → password mới xuất hiện trong K8s Secret, trong khi cột `AGE` và `RESTARTS` của pod không thay đổi.
+* **Hiển thị hình ảnh:**
+  ![Minh chứng ESO Rotate No Restart](./images/2_1_eso_rotate_no_restart.png)
 
 ---
 
-## PHẦN 5: LAB 2.2 - PHÂN TÍCH LỖ HỔNG VÀ XÁC THỰC CHỮ KÝ (TRIVY + COSIGN + SIGSTORE)
-Chứng minh việc kiểm tra lỗ hổng bảo mật (Trivy Scan), ký ảnh container (Cosign Sign) trong CI và chính sách admission controller chặn thành công ảnh không ký.
+## PHẦN 5: LAB 2.2 - TRIVY SCAN + COSIGN SIGN + SIGSTORE ADMISSION VERIFY
+Chứng minh: CI đỏ khi có CVE HIGH/CRITICAL, image được ký sau khi scan pass, cluster chặn image không có chữ ký.
 
 ### Lệnh chạy kiểm tra:
-Chạy lần lượt các lệnh dưới đây trong terminal:
+Chạy theo đúng thứ tự dưới đây:
+
 ```bash
-# 1. Kích hoạt xác thực chữ ký ảnh trên namespace demo
+# BƯỚC 1: Xác nhận policy-controller webhook đang chạy
+kubectl get pods -n cosign-system
+
+# BƯỚC 2: Xác nhận namespace demo có label kích hoạt Sigstore verification
+kubectl get namespace demo --show-labels
+# Kỳ vọng: có label policy.sigstore.dev/include=true
+# Nếu chưa có, chạy:
 kubectl label namespace demo policy.sigstore.dev/include=true --overwrite
 
-# 2. Thử tạo Pod với ảnh chưa được ký (Kỳ vọng: Bị reject bởi webhook policy.sigstore.dev)
+# BƯỚC 3: Verify chữ ký image đã ký từ CLI (chứng minh image hợp lệ)
+cosign verify --key signing/cosign.pub ghcr.io/bearh141/w10-api-141:0.0.2
+# Kỳ vọng: in ra JSON xác nhận chữ ký hợp lệ
+
+# BƯỚC 4: Deploy image KHÔNG có chữ ký / không thuộc policy
+# (pod-unsigned.yaml dùng docker.io/library/nginx:1.25.1 — không match glob ghcr.io/bearh141/*)
 kubectl apply -f tests/pod-unsigned.yaml
+# Kỳ vọng: Error từ webhook "policy.sigstore.dev" — no matching policies / validation failed
 
-# 3. Thử tạo Pod với ảnh đã ký hợp lệ (Kỳ vọng: Tạo thành công)
+# BƯỚC 5: Deploy image ĐÃ ký hợp lệ từ CI
 kubectl apply -f tests/pod-signed.yaml
+# Kỳ vọng: pod/pod-signed created
 
-# 4. Dọn dẹp sau khi kiểm tra xong:
+# Dọn dẹp
 kubectl delete -f tests/pod-signed.yaml
 ```
 
-### Minh chứng cần chụp:
-* **Tên file ảnh 1 đặt là:** `2_2_github_actions.png`
-* **Nội dung cần chụp:** Chụp màn hình lịch sử chạy GitHub Actions workflow cho thấy build, quét Trivy và ký ảnh Cosign thành công.
+### Minh chứng cần chụp — 3 ảnh:
+
+* **Tên file ảnh 1:** `2_2_github_actions.png`
+* **Nội dung:** Chụp màn hình GitHub Actions workflow run thành công — phải thấy rõ 3 steps: **Trivy scan pass** (xanh), **Cosign sign** (xanh), và tổng workflow **passed**. Nếu có 1 run thất bại vì Trivy phát hiện CVE HIGH thì chụp thêm để minh chứng CI đỏ.
 * **Hiển thị hình ảnh:**
   ![Minh chứng GitHub Actions](./images/2_2_github_actions.png)
 
-* **Tên file ảnh 2 đặt là:** `2_2_signature_verify.png`
-* **Nội dung cần chụp:** Terminal chạy lệnh deploy Pod chưa ký (bị reject với lỗi `validation failed`) và Pod đã ký (tạo thành công).
+* **Tên file ảnh 2:** `2_2_cosign.png`
+* **Nội dung:** Gộp 2 minh chứng trong 1 ảnh: (1) lệnh `cosign verify` xác nhận chữ ký hợp lệ của image `0.0.3`, và (2) terminal chạy `pod-unsigned` bị reject bởi webhook `policy.sigstore.dev`, còn `pod-signed` được tạo thành công.
 * **Hiển thị hình ảnh:**
-  ![Minh chứng xác thực chữ ký](./images/2_2_signature_verify.png)
-
----
-
-## PHẦN 6: LAB 2.3 - TRIỂN KHAI LIÊN TỤC (PROGRESSIVE DELIVERY - ARGO ROLLOUTS)
-Chứng minh tiến trình triển khai Canary và thu thập metrics đánh giá tự động thành công thông qua Argo Rollouts và Prometheus.
-
-### Lệnh chạy kiểm tra:
-Chạy lần lượt các lệnh dưới đây trong terminal:
-```bash
-# 1. Theo dõi tiến trình Rollout (Kỳ vọng: Đang trong các bước Canary hoặc đã hoàn thành Healthy)
-kubectl get rollout api -n demo
-
-# 2. Kiểm tra trạng thái AnalysisRun thu thập metric thành công (Kỳ vọng: STATUS = Running hoặc Successful)
-kubectl get analysisrun -n demo
-```
-
-### Minh chứng cần chụp:
-* **Tên file ảnh 1 đặt là:** `2_3_rollout_progress.png`
-* **Nội dung cần chụp:** Terminal hiển thị trạng thái Rollout đang phân chia traffic (Canary) hoặc đã chạy thành công lên 100%, kèm theo danh sách AnalysisRun thành công.
-* **Hiển thị hình ảnh:**
-  ![Minh chứng Rollout Progress](./images/2_3_rollout_progress.png)
-
-* **Tên file ảnh 2 đặt là:** `2_3_argocd_healthy.png`
-* **Nội dung cần chụp:** Chụp màn hình giao diện Argo CD cho thấy ứng dụng `api` và ứng dụng `analysis` hiển thị màu xanh lá cây (`Healthy`) và đã được đồng bộ hóa (`Synced`).
-* **Hiển thị hình ảnh:**
-  ![Argo CD Healthy](./images/2_3_argocd_healthy.png)
+  ![Minh chứng Cosign Verify và Admission](./images/2_2_cosign.png)
