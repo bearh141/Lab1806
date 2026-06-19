@@ -9,6 +9,7 @@ spec:
     - key:
         data: |
           -----BEGIN PUBLIC KEY-----
-          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEze0UyPsxVVczrNcje2TshQSsg4Ln
-          Q4BsnV6CQQ0thNgMX1ACYTHgsdUZzOHw3EIRswl9Pi9GkLOcsGKJ4zYrDQ==
+          MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXSynXtPCQdDgDOjO7zdxDQCgw36D
+          ioHMaKQ78DBPLDVtlr7jZTiSh1gQgfv4Ye+HSwifbPRf9Kn5R5c23Hef2A==
           -----END PUBLIC KEY-----
+
