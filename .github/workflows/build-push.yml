@@ -50,7 +50,6 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
             type=raw,value=${{ steps.semver.outputs.version }}
             type=sha,prefix=v${{ steps.semver.outputs.version }}-
 
