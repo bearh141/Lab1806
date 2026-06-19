@@ -25,7 +25,7 @@ spec:
         runAsUser: 1000
       containers:
       - name: api
-        image: ghcr.io/bearh141/w10-api-141:0.0.3
+        image: ghcr.io/bearh141/w10-api-141:0.0.4
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -36,7 +36,7 @@ spec:
           readOnly: true
         env:
         - name: VERSION
-          value: "v0.0.3"
+          value: "v0.0.4"
         - name: ERROR_RATE
           value: "0"
         livenessProbe:
