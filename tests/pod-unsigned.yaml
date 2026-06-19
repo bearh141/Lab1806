@@ -5,8 +5,11 @@ metadata:
   namespace: demo
 spec:
   containers:
-  - name: api
-    image: ghcr.io/bearh141/w10-api-141:unsigned
+  - name: nginx
+    # Image từ Docker Hub — không thuộc glob ghcr.io/bearh141/*
+    # ClusterImagePolicy sẽ reject với lỗi rõ ràng "no matching policies"
+    # hoặc "image not allowed" từ policy.sigstore.dev webhook
+    image: docker.io/library/nginx:1.25.1
     resources:
       limits:
         cpu: 100m
